@@ -139,15 +139,25 @@ For 3-phase motor control, the MID400 can directly sense phase-to-phase voltage:
 - Pin 5 (Phototransistor Emitter): Connect to GND
 - Pin 6: No connection (NC)
 
-**Important:** Use 1/2W or higher rated resistors for AC line connections (Pins 1-2) to handle voltage spikes and ensure safety.
+**Resistor Calculations for 400V 3-Phase (Phase-to-Phase = ~400V):**
+- Current through LED: I = V / (2 × R) = 400V / (2 × 10kΩ) ≈ 20mA (typical for optocouplers)
+- Power per resistor: P = V² / (4 × R) = 400² / (4 × 10kΩ) = 4W worst case
+- **Recommended:** Use 2W or higher rated resistors with voltage rating >400V for safety margin
 
-**Note:** Different package types may have different pin arrangements. Always verify with the MID400 datasheet for your specific package.
+**Important Safety Notes:**
+- Use 1/2W minimum, 2W recommended resistors for AC line connections (Pins 1-2)
+- Resistor voltage rating must exceed peak AC voltage (400V × 1.414 = 565V peak)
+- For different voltage systems, adjust resistor values: R(kΩ) ≈ V(AC) / 20mA
+- Always verify actual voltage levels and adjust component ratings accordingly
+
+**Note:** Different package types may have different pin arrangements. Always verify with the MID400 datasheet for your specific package and voltage rating.
 
 **Advantages for 3-Phase:**
 - Detects zero-crossing between any two phases (L1-L2, L2-L3, or L1-L3)
 - Provides reliable synchronization for all three triacs
 - Simpler circuit than detecting from neutral
-- Wide input voltage range (100-600V AC)
+- Wide input voltage range (typically 100-600V AC - verify with specific MID400 datasheet)
+- Only one MID400 needed for 3-phase system (monitors one phase pair)
 
 ### Standard Optocoupler Wiring (Single Phase to Neutral)
 For simpler applications or single-phase systems, use 4N25 or H11A1 with bridge rectifier as shown in diagram above.
@@ -208,9 +218,9 @@ AC 120/240V ──┐
 
 ### Resistors
 - 3x 330Ω, 1/4W (LED current limit for MOC3021 - one per phase)
-- 2x 10kΩ, 1/2W (MID400 AC input resistors - high voltage rating) OR 2x 10kΩ, 1/4W (4N25/H11A1 voltage divider)
-- 1x 10kΩ, 1/4W (pull-up resistor for zero-cross detector output)
-- 1x 4.7kΩ, 1/4W (zero-cross detector - only needed for 4N25/H11A1 option)
+- 2x 10kΩ, 2W (MID400 AC input resistors - one MID400 unit monitors one phase pair) OR 2x 10kΩ, 1/4W (4N25/H11A1 voltage divider)
+- 1x 10kΩ, 1/4W (pull-up resistor for zero-crossing detector output)
+- 1x 4.7kΩ, 1/4W (zero-crossing detector - only needed for 4N25/H11A1 option)
 - 3x 100Ω, 2W (snubber circuits - one per triac, high power rating)
 
 ### Capacitors
