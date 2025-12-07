@@ -66,29 +66,27 @@ AVR Pin (PB2/3) ─────┤
 
 ### Option 1: MID400 Optocoupler (Recommended for Phase-to-Phase Detection)
 ```
-Phase L1 ────[ 10kΩ ]────┬────┐
-                         │    │
-                         │  ┌─▼──┐
-                         │  │LED+│ Pin 1 (Anode)
-                         │  │    │
-                         │  │MID │
-                         │  │400 │
-                         │  │    │
-                         │  │LED-│ Pin 2 (Cathode)
-                         │  └─┬──┘
-                         │    │
-Phase L2 ────[ 10kΩ ]────┴────┘
-                         
-             [ 10kΩ ]
-                │
-         VCC ───┘
-                │
-         Pin 4 ─┴────────► PD4 (AVR)
-         (Collector)
-                
-         Pin 5 ──────────► GND
-         (Emitter)
+                      ┌──────────────┐
+Phase L1 ────[ 10kΩ ]─┤              │
+                      │    MID400    │
+                      │              │ Pin 1 (LED+)
+                      │              │ Pin 2 (LED-)
+                      │              │
+Phase L2 ────[ 10kΩ ]─┤              │
+                      └──────────────┘
+                            │
+                            │ Pin 4 (Collector)
+                     [ 10kΩ ]
+                            │
+                      VCC ──┘
+                            │
+                     ───────┴────────► PD4 (AVR)
+                            
+                     Pin 5 ──────────► GND
+                     (Emitter)
 ```
+**Circuit:** Two 10kΩ resistors in series between Phase L1 and Phase L2, with MID400 LED between them.
+
 **Note:** Pin numbers reference DIP-6 package. Check datasheet for your specific package type.
 
 **MID400 Advantages:**
@@ -132,8 +130,8 @@ AC Line (Neut)───┼─────┤
 For 3-phase motor control, the MID400 can directly sense phase-to-phase voltage:
 
 **Pin Connections (DIP-6 Package):**
-- Pin 1 (LED Anode): Connect to Phase L1 through 10kΩ, 1/2W resistor (high voltage rating)
-- Pin 2 (LED Cathode): Connect to Phase L2 through 10kΩ, 1/2W resistor (high voltage rating)
+- Pin 1 (LED Anode): Connect to Phase L1 through 10kΩ, 2W resistor (high voltage rating)
+- Pin 2 (LED Cathode): Connect to Phase L2 through 10kΩ, 2W resistor (high voltage rating)
 - Pin 3: No connection (NC)
 - Pin 4 (Phototransistor Collector): Connect to AVR PD4 and VCC through 10kΩ, 1/4W pull-up resistor
 - Pin 5 (Phototransistor Emitter): Connect to GND
@@ -145,9 +143,9 @@ For 3-phase motor control, the MID400 can directly sense phase-to-phase voltage:
 - **Recommended:** Use 2W or higher rated resistors with voltage rating >400V for safety margin
 
 **Important Safety Notes:**
-- Use 1/2W minimum, 2W recommended resistors for AC line connections (Pins 1-2)
+- Use 2W rated resistors for AC line connections (Pins 1-2) to handle power dissipation
 - Resistor voltage rating must exceed peak AC voltage (400V × 1.414 = 565V peak)
-- For different voltage systems, adjust resistor values: R(kΩ) ≈ V(AC) / 20mA
+- For different voltage systems, adjust resistor values: R(Ω) = V(AC) / 0.020A or R(kΩ) = V(AC) / 20mA
 - Always verify actual voltage levels and adjust component ratings accordingly
 
 **Note:** Different package types may have different pin arrangements. Always verify with the MID400 datasheet for your specific package and voltage rating.
