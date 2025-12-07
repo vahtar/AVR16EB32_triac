@@ -20,7 +20,12 @@ void triac_init(void) {
     
     /* Configure zero-cross detection pin as input with pull-up */
     PORTD.DIRCLR = (1 << ZERO_CROSS_PIN);
-    PORTD.PIN4CTRL = PORT_PULLUPEN_bm | PORT_ISC_BOTHEDGES_gc;
+    /* Use macro to configure the correct pin's control register */
+    #if ZERO_CROSS_PIN == 4
+        PORTD.PIN4CTRL = PORT_PULLUPEN_bm | PORT_ISC_BOTHEDGES_gc;
+    #else
+        #error "ZERO_CROSS_PIN must be on PORTD pin 4 for this implementation"
+    #endif
     
     /* Enable Timer/Counter B (TCB0) for phase angle control */
     /* TCB0 will be used for precise timing after zero-cross */
@@ -94,8 +99,8 @@ ISR(TCB0_INT_vect) {
             PORTB.OUTSET = (1 << TRIAC_1_PIN);
         }
         
-        /* Set timer for pulse width (50us) */
-        TCB0.CCMP = 500;  /* 50us at 10 MHz */
+        /* Set timer for pulse width */
+        TCB0.CCMP = TRIAC_PULSE_WIDTH_US * 10;  /* Convert to 10MHz timer ticks */
         triac_state = 2;
         
     } else if (triac_state == 2) {
@@ -103,9 +108,9 @@ ISR(TCB0_INT_vect) {
         PORTB.OUTCLR = (1 << TRIAC_1_PIN);
         
         /* Set timer to fire triac 2 at its calculated phase angle */
-        /* Timer should fire when total time equals triac2_delay_ticks */
-        TCB0.CNT = 0;  /* Reset counter */
+        /* Update compare value then reset counter for clean timing */
         TCB0.CCMP = triac2_delay_ticks;
+        TCB0.CNT = 0;  /* Reset counter after updating compare */
         triac_state = 3;
         
     } else if (triac_state == 3) {
@@ -114,8 +119,8 @@ ISR(TCB0_INT_vect) {
             PORTB.OUTSET = (1 << TRIAC_2_PIN);
         }
         
-        /* Set timer for pulse width (50us) */
-        TCB0.CCMP = 500;  /* 50us at 10 MHz */
+        /* Set timer for pulse width */
+        TCB0.CCMP = TRIAC_PULSE_WIDTH_US * 10;  /* Convert to 10MHz timer ticks */
         triac_state = 4;
         
     } else if (triac_state == 4) {
@@ -140,16 +145,16 @@ ISR(PORTD_PORT_vect) {
         triac_state = 1;
         
         /* Calculate phase angle delay for triac 1 */
-        /* Phase angle: 0% = full delay (~8333us), 100% = min delay (~500us) */
+        /* Phase angle: 0% power = full delay, 100% power = minimum delay */
         uint32_t delay_us = AC_HALF_PERIOD_US - 
-                           ((uint32_t)triac1_power * (AC_HALF_PERIOD_US - 500)) / 100;
+                           ((uint32_t)triac1_power * (AC_HALF_PERIOD_US - MIN_FIRING_DELAY_US)) / 100;
         
         /* Convert to timer ticks (10 MHz = 0.1us per tick) */
         TCB0.CCMP = delay_us * 10;
         
         /* Calculate phase angle delay for triac 2 and store for later */
         uint32_t delay2_us = AC_HALF_PERIOD_US - 
-                            ((uint32_t)triac2_power * (AC_HALF_PERIOD_US - 500)) / 100;
+                            ((uint32_t)triac2_power * (AC_HALF_PERIOD_US - MIN_FIRING_DELAY_US)) / 100;
         triac2_delay_ticks = delay2_us * 10;
         
         /* Enable timer */

@@ -22,8 +22,12 @@
 #define JOYSTICK_CENTER         512  /* Center position (10-bit ADC) */
 #define JOYSTICK_DEADZONE       50   /* Deadzone around center */
 
+/* Triac Timing Parameters */
+#define MIN_FIRING_DELAY_US     500  /* Minimum delay for max power (microseconds) */
+#define TRIAC_PULSE_WIDTH_US    50   /* Triac gate pulse width (microseconds) */
+
 /* AC Frequency */
 #define AC_FREQ_HZ              60   /* 60 Hz AC (change to 50 for Europe) */
-#define AC_HALF_PERIOD_US       8333 /* Half period in microseconds (1/60/2 * 1000000) */
+#define AC_HALF_PERIOD_US       8333 /* Half period in microseconds (rounded from 8333.33) */
 
 #endif /* CONFIG_H */
