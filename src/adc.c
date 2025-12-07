@@ -12,18 +12,15 @@ void adc_init(void) {
     ADC0.CTRLC = ADC_REFSEL_VDD_gc |      /* VDD reference */
                  ADC_SAMPCAP_bm;          /* Sample capacitance selection */
     ADC0.CTRLE = 64;                      /* Sample duration = 64 CLK_PER cycles */
-    ADC0.CTRLF = ADC_FREERUN_bm;          /* Free running mode disabled initially */
-    
-    /* Set resolution to 10-bit */
-    ADC0.COMMAND = ADC_MODE_SINGLE_10BIT_gc;
+    /* Free running mode disabled (default) */
 }
 
 uint16_t adc_read(uint8_t channel) {
     /* Select ADC channel */
     ADC0.MUXPOS = channel;
     
-    /* Start conversion */
-    ADC0.COMMAND = ADC_START_IMMEDIATE_gc;
+    /* Start single 10-bit conversion */
+    ADC0.COMMAND = ADC_MODE_SINGLE_10BIT_gc | ADC_START_IMMEDIATE_gc;
     
     /* Wait for conversion to complete */
     while (!(ADC0.INTFLAGS & ADC_RESRDY_bm));
