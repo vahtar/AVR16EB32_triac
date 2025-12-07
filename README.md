@@ -1,37 +1,37 @@
-# AVR16EB32 Triac Control with Joystick
+# AVR16EB32 3-Phase Motor Control with Joystick
 
-This project implements a triac control system using a 10k potentiometer joystick with the AVR16EB32 microcontroller. The system allows bidirectional control of two AC loads through triacs based on joystick position.
+This project implements a 3-phase motor triac control system using a 10k potentiometer joystick with the AVR16EB32 microcontroller. The system allows smooth speed control of a 400V 3-phase motor through phase angle control.
 
 ## Features
 
-- Dual-axis joystick control (X and Y)
-- Independent control of two triacs
-- Phase angle control for smooth power variation
+- Single-axis joystick control for motor speed
+- Synchronized control of three triacs (one per phase)
+- Phase angle control for smooth power variation (0-100%)
 - Zero-cross detection for synchronized switching
 - Deadzone around center position
-- 0-100% power control range
 - Emergency stop functionality
+- Suitable for 400V 3-phase motors
 
 ## Hardware Requirements
 
 - **Microcontroller**: AVR16EB32
-- **Joystick**: Dual-axis analog joystick with 10kΩ potentiometers
-- **Triacs**: Two triacs (e.g., BT136, BTA16) for AC load control
-- **Optocouplers**: MOC3021 or similar for isolation
+- **Joystick**: Single-axis analog joystick with 10kΩ potentiometer
+- **Triacs**: Three triacs (e.g., BT136, BTA16) rated for 400V AC
+- **Optocouplers**: MOC3021 or similar for isolation (3 units)
 - **Zero-cross detector**: AC line zero-crossing detection circuit
-- **Power supply**: 5V for microcontroller, isolated AC supply for triacs
+- **Power supply**: 5V for microcontroller, isolated 400V 3-phase supply for motor
 
 ## Pin Connections
 
-### ADC Inputs (Joystick)
-- **PA0** - Joystick X-axis (horizontal)
-- **PA1** - Joystick Y-axis (vertical)
-- **GND** - Common ground for potentiometers
-- **VCC** - 5V supply for potentiometers
+### ADC Input (Joystick)
+- **PA0** - Joystick axis (single axis control)
+- **GND** - Common ground for potentiometer
+- **VCC** - 5V supply for potentiometer
 
 ### Digital Outputs (Triac Control)
-- **PB2** - Triac 1 control (via optocoupler)
-- **PB3** - Triac 2 control (via optocoupler)
+- **PB2** - Triac 1 control (Phase L1, via optocoupler)
+- **PB3** - Triac 2 control (Phase L2, via optocoupler)
+- **PB4** - Triac 3 control (Phase L3, via optocoupler)
 
 ### Digital Input (Zero-Cross Detection)
 - **PD4** - Zero-cross detection signal
@@ -40,20 +40,18 @@ This project implements a triac control system using a 10k potentiometer joystic
 
 ### Joystick Interface
 ```
-VCC ----+----[ 10kΩ Pot X ]----+---- GND
-        |                      |
-        +----> PA0             |
-                               |
-VCC ----+----[ 10kΩ Pot Y ]----+---- GND
-        |                      |
-        +----> PA1             |
+VCC ----+----[ 10kΩ Pot ]----+---- GND
+        |                    |
+        +----> PA0           |
 ```
 
 ### Triac Control (per channel)
 ```
-PB2/PB3 --> 330Ω --> LED (MOC3021) --> Triac Gate
-                     |                    |
-                    GND              AC Load
+### Triac Control (per phase)
+```
+PB2/PB3/PB4 --> 330Ω --> LED (MOC3021) --> Triac Gate
+                          |                    |
+                         GND            400V 3-Phase Motor
 ```
 
 ### Zero-Cross Detector
@@ -97,19 +95,15 @@ make clean
 ## Operation
 
 ### Joystick Control
-- **X-axis** (horizontal): Controls Triac 1 power
-  - Right: Increase power (0-100%)
-  - Left: Alternative control mode
-  - Center: 0% power (with deadzone)
-
-- **Y-axis** (vertical): Controls Triac 2 power
-  - Up: Increase power (0-100%)
-  - Down: Alternative control mode
+- **Single Axis**: Controls 3-phase motor speed (all three triacs synchronized)
+  - Forward: Increase power (0-100%)
+  - Backward: Decrease power
   - Center: 0% power (with deadzone)
 
 ### Power Control
 - Power is controlled using phase angle control
 - Zero-cross detection ensures synchronized switching
+- All three phases controlled with same power level for balanced motor operation
 - Power range: 0-100% (fully off to fully on)
 - Update rate: ~100Hz (10ms per cycle)
 
@@ -117,23 +111,25 @@ make clean
 
 Edit `include/config.h` to adjust:
 - CPU frequency (`F_CPU`)
-- ADC channel assignments
-- Triac pin assignments
-- AC frequency (50Hz or 60Hz)
+- ADC channel assignment
+- Triac pin assignments (PB2, PB3, PB4)
+- AC frequency (50Hz or 60Hz) 
 - Joystick deadzone
 - Power level limits
 
 ## Safety Considerations
 
-⚠️ **WARNING**: This project involves AC mains voltage which can be lethal!
+⚠️ **WARNING**: This project involves 400V 3-phase AC which can be LETHAL!
 
-- Always use proper isolation (optocouplers)
+- **HIGH VOLTAGE**: 400V 3-phase system requires professional installation
+- Always use proper isolation (optocouplers rated for 400V)
 - Ensure all AC connections are properly insulated
-- Use appropriate fusing and circuit protection
+- Use appropriate fusing and circuit protection for motor current
 - Test with low voltage/current loads first
 - Never touch AC circuits while powered
 - Follow local electrical codes and regulations
-- Consider professional review of circuit design
+- **MANDATORY**: Professional electrician review for 3-phase installations
+- Use proper motor protection (thermal overload, contactor)
 
 ## License
 
