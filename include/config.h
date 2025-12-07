@@ -14,7 +14,7 @@
 #define TRIAC_1_PIN             2  /* PB2 - Triac 1 control (Phase L1) */
 #define TRIAC_2_PIN             3  /* PB3 - Triac 2 control (Phase L2) */
 #define TRIAC_3_PIN             4  /* PB4 - Triac 3 control (Phase L3) */
-#define ZERO_CROSS_PIN          4  /* PD4 - Zero cross detection */
+#define ZERO_CROSS_PIN          4  /* PD4 - Zero cross detection (different port than TRIAC_3_PIN) */
 
 /* Power Control Parameters */
 #define MIN_POWER_LEVEL         0

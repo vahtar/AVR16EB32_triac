@@ -45,8 +45,6 @@ VCC ----+----[ 10kΩ Pot ]----+---- GND
         +----> PA0           |
 ```
 
-### Triac Control (per channel)
-```
 ### Triac Control (per phase)
 ```
 PB2/PB3/PB4 --> 330Ω --> LED (MOC3021) --> Triac Gate
