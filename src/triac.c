@@ -21,7 +21,17 @@ void triac_init(void) {
     PORTB.DIRSET = (1 << TRIAC_1_PIN) | (1 << TRIAC_2_PIN) | (1 << TRIAC_3_PIN);
     PORTB.OUTCLR = (1 << TRIAC_1_PIN) | (1 << TRIAC_2_PIN) | (1 << TRIAC_3_PIN);
     
-    /* Configure zero-cross detection pin as input with pull-up */
+    /* Configure zero-cross detection pin as input with pull-up 
+     * Compatible with:
+     * - MID400 AC input optocoupler (recommended for phase-to-phase detection)
+     * - Standard optocouplers (4N25, H11A1) with bridge rectifier circuit
+     * 
+     * MID400 advantages:
+     * - Direct phase-to-phase sensing (ideal for 3-phase systems)
+     * - Built-in zero-cross detection
+     * - Better noise immunity
+     * - Simplified circuit
+     */
     PORTD.DIRCLR = (1 << ZERO_CROSS_PIN);
     /* Use macro to configure the correct pin's control register */
     #if ZERO_CROSS_PIN == 4

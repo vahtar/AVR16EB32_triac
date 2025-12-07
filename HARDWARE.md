@@ -64,6 +64,40 @@ AVR Pin (PB2/3) ─────┤
 
 ## Zero-Cross Detector Circuit
 
+### Option 1: MID400 Optocoupler (Recommended for Phase-to-Phase Detection)
+```
+                      ┌──────────────┐
+Phase L1 ────[ 10kΩ ]─┤              │
+                      │    MID400    │
+                      │              │ Pin 1 (LED+)
+                      │              │ Pin 2 (LED-)
+                      │              │
+Phase L2 ────[ 10kΩ ]─┤              │
+                      └──────────────┘
+                            │
+                            │ Pin 4 (Collector)
+                     [ 10kΩ ]
+                            │
+                      VCC ──┘
+                            │
+                     ───────┴────────► PD4 (AVR)
+                            
+                     Pin 5 ──────────► GND
+                     (Emitter)
+```
+**Circuit:** Two 10kΩ resistors in series between Phase L1 and Phase L2, with MID400 LED between them.
+
+**Note:** Pin numbers reference DIP-6 package. Check datasheet for your specific package type.
+
+**MID400 Advantages:**
+- Designed specifically for AC input and zero-crossing detection
+- Can directly sense phase-to-phase voltage (ideal for 3-phase systems)
+- Better noise immunity and more reliable zero-crossing detection
+- Simplified circuit with fewer components
+- Wide AC input voltage range (100-600V AC)
+- Built-in current limiting
+
+### Option 2: Standard Optocoupler (4N25/H11A1)
 ```
 AC Line (Hot) ───┬─────┐
                  │     │
@@ -89,6 +123,49 @@ AC Line (Neut)───┼─────┤
                  │
                 GND
 ```
+
+## Zero-Cross Detector Wiring Guide
+
+### MID400 Wiring (3-Phase System)
+For 3-phase motor control, the MID400 can directly sense phase-to-phase voltage:
+
+**Pin Connections (DIP-6 Package):**
+- Pin 1 (LED Anode): Connect to Phase L1 through 10kΩ, 5W resistor (high voltage rating >600V)
+- Pin 2 (LED Cathode): Connect to Phase L2 through 10kΩ, 5W resistor (high voltage rating >600V)
+- Pin 3: No connection (NC)
+- Pin 4 (Phototransistor Collector): Connect to AVR PD4 and VCC through 10kΩ, 1/4W pull-up resistor
+- Pin 5 (Phototransistor Emitter): Connect to GND
+- Pin 6: No connection (NC)
+
+**Resistor Calculations for 400V 3-Phase (Phase-to-Phase = ~400V RMS):**
+- Current through LED: I = V_RMS / (R1 + R2) = 400V / (10kΩ + 10kΩ) = 20mA nominal
+  - Note: Actual current may vary ±5-10% due to resistor tolerances and voltage variations
+- Voltage drop per resistor: V = 400V / 2 = 200V RMS per resistor
+- Power per resistor (RMS): P = V² / R = (200V)² / 10kΩ = 4W continuous
+- Power per resistor (instantaneous peak): P_peak = (200V × √2)² / 10kΩ ≈ 8W at AC peak
+- **Recommended:** Use 5W or higher rated resistors for adequate safety margin
+
+**Important Safety Notes:**
+- Use 5W minimum rated resistors for AC line connections (Pins 1-2) to handle power dissipation
+- Resistor voltage rating must exceed peak AC voltage: 400V_RMS × √2 ≈ 565V peak
+- For different voltage systems, adjust total series resistance: R_total(Ω) = V_RMS(AC) / I_LED(A)
+  - Each resistor: R = R_total / 2 (for two resistors in series)
+  - Typical I_LED = 10-30mA (verify with MID400 datasheet for your specific part number)
+  - Example using 20mA: For 230V system, R_total = 230V / 0.020A = 11.5kΩ, use 2× 5.6kΩ or 2× 6.8kΩ
+- Always verify MID400 recommended operating current and adjust resistors accordingly
+- Account for voltage variations and resistor tolerances when selecting components
+
+**Note:** Different package types may have different pin arrangements. Always verify with the MID400 datasheet for your specific package and voltage rating.
+
+**Advantages for 3-Phase:**
+- Detects zero-crossing between any two phases (L1-L2, L2-L3, or L1-L3)
+- Provides reliable synchronization for all three triacs
+- Simpler circuit than detecting from neutral
+- Wide input voltage range (typically 100-600V AC - verify with specific MID400 datasheet)
+- Only one MID400 needed for 3-phase system (monitors one phase pair)
+
+### Standard Optocoupler Wiring (Single Phase to Neutral)
+For simpler applications or single-phase systems, use 4N25 or H11A1 with bridge rectifier as shown in diagram above.
 
 ## Joystick Connection
 
@@ -136,27 +213,28 @@ AC 120/240V ──┐
 
 ### Main Components
 - 1x AVR16EB32 microcontroller
-- 1x Dual-axis 10kΩ joystick module
-- 2x BT136 or BTA16 triacs (600V, 16A)
-- 2x MOC3021 optocoupler triacs
-- 1x 4N25 or H11A1 optocoupler (zero-cross)
+- 1x Dual-axis 10kΩ joystick module (only single axis used for 3-phase control)
+- 3x BT136 or BTA16 triacs (600V, 16A) - one per phase
+- 3x MOC3021 optocoupler triacs - one per phase
+- 1x MID400 AC input optocoupler (zero-cross, recommended) OR 1x 4N25/H11A1 optocoupler
 - 1x 7805 voltage regulator
 - 1x Bridge rectifier (1A)
 - 1x 12V transformer
 
 ### Resistors
-- 2x 330Ω (LED current limit)
-- 2x 10kΩ (zero-cross detector)
-- 1x 4.7kΩ (zero-cross detector)
-- 2x 100Ω (snubber circuits)
+- 3x 330Ω, 1/4W (LED current limit for MOC3021 - one per phase)
+- 2x 10kΩ, 5W, >600V (MID400 AC input resistors - one MID400 unit monitors one phase pair) OR 2x 10kΩ, 1/4W (4N25/H11A1 voltage divider)
+- 1x 10kΩ, 1/4W (pull-up resistor for zero-crossing detector output)
+- 1x 4.7kΩ, 1/4W (zero-crossing detector - only needed for 4N25/H11A1 option)
+- 3x 100Ω, 2W (snubber circuits - one per triac, high power rating)
 
 ### Capacitors
 - 2x 100nF (decoupling)
 - 2x 10µF electrolytic (power supply)
-- 2x 47nF (snubber circuits)
+- 3x 47nF (snubber circuits - one per triac)
 
 ### Safety Components
-- 2x Fuses (appropriate for load)
+- 3x Fuses (one per phase, appropriate for load)
 - Heat sinks for triacs (if high power)
 - Isolation barriers between AC and DC sections
 
