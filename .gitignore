@@ -1,0 +1,27 @@
+# Build directory
+build/
+
+# Object files
+*.o
+*.obj
+*.elf
+*.hex
+*.lst
+*.lss
+*.map
+*.sym
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.old
