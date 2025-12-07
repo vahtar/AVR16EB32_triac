@@ -92,9 +92,9 @@ Phase L2 ────[ 10kΩ ]────┴────┘
 **Note:** Pin numbers reference DIP-6 package. Check datasheet for your specific package type.
 
 **MID400 Advantages:**
-- Designed specifically for AC input and zero-cross detection
+- Designed specifically for AC input and zero-crossing detection
 - Can directly sense phase-to-phase voltage (ideal for 3-phase systems)
-- Better noise immunity and more reliable zero-cross detection
+- Better noise immunity and more reliable zero-crossing detection
 - Simplified circuit with fewer components
 - Wide AC input voltage range (100-600V AC)
 - Built-in current limiting
@@ -132,12 +132,14 @@ AC Line (Neut)───┼─────┤
 For 3-phase motor control, the MID400 can directly sense phase-to-phase voltage:
 
 **Pin Connections (DIP-6 Package):**
-- Pin 1 (LED Anode): Connect to Phase L1 through 10kΩ resistor
-- Pin 2 (LED Cathode): Connect to Phase L2 through 10kΩ resistor  
+- Pin 1 (LED Anode): Connect to Phase L1 through 10kΩ, 1/2W resistor (high voltage rating)
+- Pin 2 (LED Cathode): Connect to Phase L2 through 10kΩ, 1/2W resistor (high voltage rating)
 - Pin 3: No connection (NC)
-- Pin 4 (Phototransistor Collector): Connect to AVR PD4 and VCC through 10kΩ pull-up resistor
+- Pin 4 (Phototransistor Collector): Connect to AVR PD4 and VCC through 10kΩ, 1/4W pull-up resistor
 - Pin 5 (Phototransistor Emitter): Connect to GND
 - Pin 6: No connection (NC)
+
+**Important:** Use 1/2W or higher rated resistors for AC line connections (Pins 1-2) to handle voltage spikes and ensure safety.
 
 **Note:** Different package types may have different pin arrangements. Always verify with the MID400 datasheet for your specific package.
 
@@ -205,10 +207,11 @@ AC 120/240V ──┐
 - 1x 12V transformer
 
 ### Resistors
-- 3x 330Ω (LED current limit for MOC3021 - one per phase)
-- 3x 10kΩ (zero-cross detector - for MID400: 2x input resistors + 1x pull-up; for 4N25/H11A1: voltage divider + 1x pull-up)
-- 1x 4.7kΩ (zero-cross detector - only needed for 4N25/H11A1 option)
-- 3x 100Ω (snubber circuits - one per triac)
+- 3x 330Ω, 1/4W (LED current limit for MOC3021 - one per phase)
+- 2x 10kΩ, 1/2W (MID400 AC input resistors - high voltage rating) OR 2x 10kΩ, 1/4W (4N25/H11A1 voltage divider)
+- 1x 10kΩ, 1/4W (pull-up resistor for zero-cross detector output)
+- 1x 4.7kΩ, 1/4W (zero-cross detector - only needed for 4N25/H11A1 option)
+- 3x 100Ω, 2W (snubber circuits - one per triac, high power rating)
 
 ### Capacitors
 - 2x 100nF (decoupling)
