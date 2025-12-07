@@ -66,29 +66,30 @@ AVR Pin (PB2/3) ─────┤
 
 ### Option 1: MID400 Optocoupler (Recommended for Phase-to-Phase Detection)
 ```
-Phase L1 ────┬─────┐
-             │     │
-          ┌──▼──┐  │ 
-          │ 10kΩ│  │
-          └──┬──┘  │
-             │     │
-Phase L2 ────┼─────┤
-             │     │
-          ┌──▼──┐  │ 10kΩ
-          │ 10kΩ│  │
-          └──┬──┘  │
-             │     │
-             ├─────┘
-             │
-         ┌───▼───┐
-         │ MID400│ AC Input Optocoupler
-         │       │ (Zero-Cross Detection)
-         └───┬───┘
-             │
-             ├───────► PD4 (AVR)
-             │
-            GND
+Phase L1 ────[ 10kΩ ]────┬────┐
+                         │    │
+                         │  ┌─▼──┐
+                         │  │LED+│ Pin 1 (Anode)
+                         │  │    │
+                         │  │MID │
+                         │  │400 │
+                         │  │    │
+                         │  │LED-│ Pin 2 (Cathode)
+                         │  └─┬──┘
+                         │    │
+Phase L2 ────[ 10kΩ ]────┴────┘
+                         
+             [ 10kΩ ]
+                │
+         VCC ───┘
+                │
+         Pin 4 ─┴────────► PD4 (AVR)
+         (Collector)
+                
+         Pin 5 ──────────► GND
+         (Emitter)
 ```
+**Note:** Pin numbers reference DIP-6 package. Check datasheet for your specific package type.
 
 **MID400 Advantages:**
 - Designed specifically for AC input and zero-cross detection
@@ -130,11 +131,15 @@ AC Line (Neut)───┼─────┤
 ### MID400 Wiring (3-Phase System)
 For 3-phase motor control, the MID400 can directly sense phase-to-phase voltage:
 
-**Pin Connections:**
-- Pin 1 (Anode): Connect to Phase L1 through 10kΩ resistor
-- Pin 2 (Cathode): Connect to Phase L2 through 10kΩ resistor
-- Pin 4 (Collector): Connect to AVR PD4 with 10kΩ pull-up to VCC
-- Pin 5 (Emitter): Connect to GND
+**Pin Connections (DIP-6 Package):**
+- Pin 1 (LED Anode): Connect to Phase L1 through 10kΩ resistor
+- Pin 2 (LED Cathode): Connect to Phase L2 through 10kΩ resistor  
+- Pin 3: No connection (NC)
+- Pin 4 (Phototransistor Collector): Connect to AVR PD4 and VCC through 10kΩ pull-up resistor
+- Pin 5 (Phototransistor Emitter): Connect to GND
+- Pin 6: No connection (NC)
+
+**Note:** Different package types may have different pin arrangements. Always verify with the MID400 datasheet for your specific package.
 
 **Advantages for 3-Phase:**
 - Detects zero-crossing between any two phases (L1-L2, L2-L3, or L1-L3)
