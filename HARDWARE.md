@@ -130,22 +130,26 @@ AC Line (Neut)───┼─────┤
 For 3-phase motor control, the MID400 can directly sense phase-to-phase voltage:
 
 **Pin Connections (DIP-6 Package):**
-- Pin 1 (LED Anode): Connect to Phase L1 through 10kΩ, 2W resistor (high voltage rating)
-- Pin 2 (LED Cathode): Connect to Phase L2 through 10kΩ, 2W resistor (high voltage rating)
+- Pin 1 (LED Anode): Connect to Phase L1 through 10kΩ, 5W resistor (high voltage rating >600V)
+- Pin 2 (LED Cathode): Connect to Phase L2 through 10kΩ, 5W resistor (high voltage rating >600V)
 - Pin 3: No connection (NC)
 - Pin 4 (Phototransistor Collector): Connect to AVR PD4 and VCC through 10kΩ, 1/4W pull-up resistor
 - Pin 5 (Phototransistor Emitter): Connect to GND
 - Pin 6: No connection (NC)
 
-**Resistor Calculations for 400V 3-Phase (Phase-to-Phase = ~400V):**
-- Current through LED: I = V / (2 × R) = 400V / (2 × 10kΩ) ≈ 20mA (typical for optocouplers)
-- Power per resistor: P = V² / (4 × R) = 400² / (4 × 10kΩ) = 4W worst case
-- **Recommended:** Use 2W or higher rated resistors with voltage rating >400V for safety margin
+**Resistor Calculations for 400V 3-Phase (Phase-to-Phase = ~400V RMS):**
+- Current through LED: I = V_RMS / (R1 + R2) = 400V / (10kΩ + 10kΩ) = 20mA (typical for optocouplers)
+- Voltage drop per resistor: V = 400V / 2 = 200V RMS per resistor
+- Power per resistor (RMS): P = V² / R = (200V)² / 10kΩ = 4W average
+- Power per resistor (peak): P_peak = (200V × √2)² / 10kΩ ≈ 8W peak during voltage spikes
+- **Recommended:** Use 5W or higher rated resistors for adequate safety margin
 
 **Important Safety Notes:**
-- Use 2W rated resistors for AC line connections (Pins 1-2) to handle power dissipation
-- Resistor voltage rating must exceed peak AC voltage (400V × 1.414 = 565V peak)
-- For different voltage systems, adjust resistor values: R(Ω) = V(AC) / 0.020A or R(kΩ) = V(AC) / 20mA
+- Use 5W minimum rated resistors for AC line connections (Pins 1-2) to handle power dissipation
+- Resistor voltage rating must exceed peak AC voltage: 400V_RMS × √2 ≈ 565V peak
+- For different voltage systems, adjust total series resistance: R_total(Ω) = V_RMS(AC) / 0.020A
+  - Each resistor: R = R_total / 2 (for two resistors in series)
+  - Example: For 230V system, R_total = 230V / 0.020A = 11.5kΩ, use 2× 5.6kΩ or 2× 6.8kΩ
 - Always verify actual voltage levels and adjust component ratings accordingly
 
 **Note:** Different package types may have different pin arrangements. Always verify with the MID400 datasheet for your specific package and voltage rating.
@@ -216,7 +220,7 @@ AC 120/240V ──┐
 
 ### Resistors
 - 3x 330Ω, 1/4W (LED current limit for MOC3021 - one per phase)
-- 2x 10kΩ, 2W (MID400 AC input resistors - one MID400 unit monitors one phase pair) OR 2x 10kΩ, 1/4W (4N25/H11A1 voltage divider)
+- 2x 10kΩ, 5W, >600V (MID400 AC input resistors - one MID400 unit monitors one phase pair) OR 2x 10kΩ, 1/4W (4N25/H11A1 voltage divider)
 - 1x 10kΩ, 1/4W (pull-up resistor for zero-crossing detector output)
 - 1x 4.7kΩ, 1/4W (zero-crossing detector - only needed for 4N25/H11A1 option)
 - 3x 100Ω, 2W (snubber circuits - one per triac, high power rating)
