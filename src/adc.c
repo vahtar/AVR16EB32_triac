@@ -32,10 +32,6 @@ uint16_t adc_read(uint8_t channel) {
     return ADC0.RESULT;
 }
 
-uint16_t adc_read_joystick_x(void) {
-    return adc_read(ADC_CHANNEL_JOYSTICK_X);
-}
-
-uint16_t adc_read_joystick_y(void) {
-    return adc_read(ADC_CHANNEL_JOYSTICK_Y);
+uint16_t adc_read_joystick(void) {
+    return adc_read(ADC_CHANNEL_JOYSTICK);
 }

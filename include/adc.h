@@ -19,17 +19,10 @@ void adc_init(void);
 uint16_t adc_read(uint8_t channel);
 
 /**
- * @brief Read joystick X-axis position
+ * @brief Read joystick position (single axis)
  * 
  * @return uint16_t ADC value (0-1023)
  */
-uint16_t adc_read_joystick_x(void);
-
-/**
- * @brief Read joystick Y-axis position
- * 
- * @return uint16_t ADC value (0-1023)
- */
-uint16_t adc_read_joystick_y(void);
+uint16_t adc_read_joystick(void);
 
 #endif /* ADC_H */

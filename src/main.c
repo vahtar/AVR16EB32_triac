@@ -15,12 +15,11 @@ int main(void) {
     
     /* Main loop */
     while (1) {
-        /* Read joystick position */
-        uint16_t x_pos = adc_read_joystick_x();
-        uint16_t y_pos = adc_read_joystick_y();
+        /* Read joystick position (single axis for 3-phase motor control) */
+        uint16_t joystick_pos = adc_read_joystick();
         
         /* Update triac control based on joystick */
-        triac_update_from_joystick(x_pos, y_pos);
+        triac_update_from_joystick(joystick_pos);
         
         /* Small delay to avoid excessive ADC reads */
         _delay_ms(10);

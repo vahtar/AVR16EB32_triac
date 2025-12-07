@@ -7,13 +7,13 @@
 #endif
 
 /* ADC Configuration */
-#define ADC_CHANNEL_JOYSTICK_X  0  /* PA0 - Joystick X-axis */
-#define ADC_CHANNEL_JOYSTICK_Y  1  /* PA1 - Joystick Y-axis */
+#define ADC_CHANNEL_JOYSTICK    0  /* PA0 - Joystick axis (single axis control) */
 #define ADC_VREF_VDD            0  /* Use VDD as reference */
 
-/* Triac Configuration */
-#define TRIAC_1_PIN             2  /* PB2 - Triac 1 control */
-#define TRIAC_2_PIN             3  /* PB3 - Triac 2 control */
+/* Triac Configuration - 3-Phase Motor Control */
+#define TRIAC_1_PIN             2  /* PB2 - Triac 1 control (Phase L1) */
+#define TRIAC_2_PIN             3  /* PB3 - Triac 2 control (Phase L2) */
+#define TRIAC_3_PIN             4  /* PB4 - Triac 3 control (Phase L3) */
 #define ZERO_CROSS_PIN          4  /* PD4 - Zero cross detection */
 
 /* Power Control Parameters */

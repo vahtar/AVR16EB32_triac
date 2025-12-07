@@ -13,7 +13,7 @@ void triac_init(void);
 /**
  * @brief Set triac power level
  * 
- * @param triac_num Triac number (0 or 1 for dual control)
+ * @param triac_num Triac number (0, 1, or 2 for 3-phase control)
  * @param power_level Power level 0-100 (percentage)
  */
 void triac_set_power(uint8_t triac_num, uint8_t power_level);
@@ -21,10 +21,9 @@ void triac_set_power(uint8_t triac_num, uint8_t power_level);
 /**
  * @brief Update triac control based on joystick position
  * 
- * @param x_value Joystick X-axis ADC value (0-1023)
- * @param y_value Joystick Y-axis ADC value (0-1023)
+ * @param joystick_value Joystick ADC value (0-1023)
  */
-void triac_update_from_joystick(uint16_t x_value, uint16_t y_value);
+void triac_update_from_joystick(uint16_t joystick_value);
 
 /**
  * @brief Emergency stop - turn off all triacs
