@@ -196,27 +196,27 @@ AC 120/240V ──┐
 
 ### Main Components
 - 1x AVR16EB32 microcontroller
-- 1x Dual-axis 10kΩ joystick module
-- 2x BT136 or BTA16 triacs (600V, 16A)
-- 2x MOC3021 optocoupler triacs
+- 1x Dual-axis 10kΩ joystick module (only single axis used for 3-phase control)
+- 3x BT136 or BTA16 triacs (600V, 16A) - one per phase
+- 3x MOC3021 optocoupler triacs - one per phase
 - 1x MID400 AC input optocoupler (zero-cross, recommended) OR 1x 4N25/H11A1 optocoupler
 - 1x 7805 voltage regulator
 - 1x Bridge rectifier (1A)
 - 1x 12V transformer
 
 ### Resistors
-- 2x 330Ω (LED current limit for MOC3021)
+- 3x 330Ω (LED current limit for MOC3021 - one per phase)
 - 3x 10kΩ (zero-cross detector - for MID400: 2x input resistors + 1x pull-up; for 4N25/H11A1: voltage divider + 1x pull-up)
 - 1x 4.7kΩ (zero-cross detector - only needed for 4N25/H11A1 option)
-- 2x 100Ω (snubber circuits)
+- 3x 100Ω (snubber circuits - one per triac)
 
 ### Capacitors
 - 2x 100nF (decoupling)
 - 2x 10µF electrolytic (power supply)
-- 2x 47nF (snubber circuits)
+- 3x 47nF (snubber circuits - one per triac)
 
 ### Safety Components
-- 2x Fuses (appropriate for load)
+- 3x Fuses (one per phase, appropriate for load)
 - Heat sinks for triacs (if high power)
 - Isolation barriers between AC and DC sections
 
