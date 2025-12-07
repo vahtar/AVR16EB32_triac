@@ -25,6 +25,7 @@
 /* Triac Timing Parameters */
 #define MIN_FIRING_DELAY_US     500  /* Minimum delay for max power (microseconds) */
 #define TRIAC_PULSE_WIDTH_US    50   /* Triac gate pulse width (microseconds) */
+#define TIMER_TICKS_PER_US      10   /* Timer ticks per microsecond at 10MHz (CLK_PER/2) */
 
 /* AC Frequency */
 #define AC_FREQ_HZ              60   /* 60 Hz AC (change to 50 for Europe) */

@@ -45,8 +45,8 @@ void triac_set_power(uint8_t triac_num, uint8_t power_level) {
     uint32_t delay_us = AC_HALF_PERIOD_US - 
                        ((uint32_t)power_level * (AC_HALF_PERIOD_US - MIN_FIRING_DELAY_US)) / 100;
     
-    /* Convert to timer ticks (10 MHz = 0.1us per tick) */
-    uint16_t delay_ticks = delay_us * 10;
+    /* Convert to timer ticks */
+    uint16_t delay_ticks = delay_us * TIMER_TICKS_PER_US;
     
     /* Update appropriate triac with atomic operations */
     if (triac_num == 0) {
@@ -110,7 +110,7 @@ ISR(TCB0_INT_vect) {
         }
         
         /* Set timer for pulse width */
-        TCB0.CCMP = TRIAC_PULSE_WIDTH_US * 10;  /* Convert to 10MHz timer ticks */
+        TCB0.CCMP = TRIAC_PULSE_WIDTH_US * TIMER_TICKS_PER_US;
         triac_state = 2;
         
     } else if (triac_state == 2) {
@@ -130,7 +130,7 @@ ISR(TCB0_INT_vect) {
         }
         
         /* Set timer for pulse width */
-        TCB0.CCMP = TRIAC_PULSE_WIDTH_US * 10;  /* Convert to 10MHz timer ticks */
+        TCB0.CCMP = TRIAC_PULSE_WIDTH_US * TIMER_TICKS_PER_US;
         triac_state = 4;
         
     } else if (triac_state == 4) {
