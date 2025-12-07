@@ -18,7 +18,7 @@ This project implements a 3-phase motor triac control system using a 10k potenti
 - **Joystick**: Single-axis analog joystick with 10kΩ potentiometer
 - **Triacs**: Three triacs (e.g., BT136, BTA16) rated for 400V AC
 - **Optocouplers**: MOC3021 or similar for isolation (3 units)
-- **Zero-cross detector**: AC line zero-crossing detection circuit
+- **Zero-cross detector**: MID400 AC input optocoupler (recommended) or standard AC line zero-crossing detection circuit (4N25/H11A1)
 - **Power supply**: 5V for microcontroller, isolated 400V 3-phase supply for motor
 
 ## Pin Connections
@@ -54,6 +54,12 @@ PB2/PB3/PB4 --> 330Ω --> LED (MOC3021) --> Triac Gate
 
 ### Zero-Cross Detector
 ```
+Option 1: MID400 (Recommended for 3-phase)
+Phase L1-L2 --> Resistors --> MID400 Optocoupler --> PD4
+                                      |
+                                     GND
+
+Option 2: Standard (4N25/H11A1)
 AC Line --> Transformer --> Bridge Rectifier --> Optocoupler --> PD4
                                                         |
                                                        GND
