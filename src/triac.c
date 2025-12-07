@@ -7,11 +7,12 @@
 static volatile uint8_t triac1_power = 0;
 static volatile uint8_t triac2_power = 0;
 
+/* Pre-calculated phase angle delays in timer ticks */
+static volatile uint16_t triac1_delay_ticks = 0;
+static volatile uint16_t triac2_delay_ticks = 0;
+
 /* State machine for triac control */
 static volatile uint8_t triac_state = 0;
-
-/* Store calculated delays for triac 2 */
-static volatile uint16_t triac2_delay_ticks = 0;
 
 void triac_init(void) {
     /* Configure triac control pins as outputs */
@@ -40,11 +41,20 @@ void triac_set_power(uint8_t triac_num, uint8_t power_level) {
         power_level = MAX_POWER_LEVEL;
     }
     
-    /* Update appropriate triac */
+    /* Calculate phase angle delay in microseconds */
+    uint32_t delay_us = AC_HALF_PERIOD_US - 
+                       ((uint32_t)power_level * (AC_HALF_PERIOD_US - MIN_FIRING_DELAY_US)) / 100;
+    
+    /* Convert to timer ticks (10 MHz = 0.1us per tick) */
+    uint16_t delay_ticks = delay_us * 10;
+    
+    /* Update appropriate triac with atomic operations */
     if (triac_num == 0) {
         triac1_power = power_level;
+        triac1_delay_ticks = delay_ticks;
     } else if (triac_num == 1) {
         triac2_power = power_level;
+        triac2_delay_ticks = delay_ticks;
     }
 }
 
@@ -108,9 +118,9 @@ ISR(TCB0_INT_vect) {
         PORTB.OUTCLR = (1 << TRIAC_1_PIN);
         
         /* Set timer to fire triac 2 at its calculated phase angle */
-        /* Update compare value then reset counter for clean timing */
+        /* Reset counter first, then update compare for predictable timing */
+        TCB0.CNT = 0;
         TCB0.CCMP = triac2_delay_ticks;
-        TCB0.CNT = 0;  /* Reset counter after updating compare */
         triac_state = 3;
         
     } else if (triac_state == 3) {
@@ -144,18 +154,8 @@ ISR(PORTD_PORT_vect) {
         TCB0.CNT = 0;
         triac_state = 1;
         
-        /* Calculate phase angle delay for triac 1 */
-        /* Phase angle: 0% power = full delay, 100% power = minimum delay */
-        uint32_t delay_us = AC_HALF_PERIOD_US - 
-                           ((uint32_t)triac1_power * (AC_HALF_PERIOD_US - MIN_FIRING_DELAY_US)) / 100;
-        
-        /* Convert to timer ticks (10 MHz = 0.1us per tick) */
-        TCB0.CCMP = delay_us * 10;
-        
-        /* Calculate phase angle delay for triac 2 and store for later */
-        uint32_t delay2_us = AC_HALF_PERIOD_US - 
-                            ((uint32_t)triac2_power * (AC_HALF_PERIOD_US - MIN_FIRING_DELAY_US)) / 100;
-        triac2_delay_ticks = delay2_us * 10;
+        /* Use pre-calculated delay values from triac_set_power() */
+        TCB0.CCMP = triac1_delay_ticks;
         
         /* Enable timer */
         TCB0.CTRLA |= TCB_ENABLE_bm;
