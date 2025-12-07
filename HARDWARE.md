@@ -95,7 +95,7 @@ Phase L2 ────┼─────┤
 - Can directly sense phase-to-phase voltage (ideal for 3-phase systems)
 - Better noise immunity and more reliable zero-cross detection
 - Simplified circuit with fewer components
-- Wide AC input voltage range (100-240V AC)
+- Wide AC input voltage range (100-600V AC)
 - Built-in current limiting
 
 ### Option 2: Standard Optocoupler (4N25/H11A1)
