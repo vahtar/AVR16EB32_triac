@@ -128,18 +128,30 @@ For zero-crossing detection, we need to scale the 400VAC signal so the zero-cros
                  └──┬──┘  └──┬──┘
                     │        │
                     │        │
-              VIN+ ─┤        ├─ VIN-
-                    │        │
-                ┌───▼────────▼───┐
-                │   AMC23C10     │
-                │  (8-pin SOIC)  │
-                │                │
-                │ 1: VDD1    VDD2: 8  ◄─── +5V (MCU Side)
-                │ 2: VIN+    GND2: 7  ◄─── GND (MCU Side)
-                │ 3: VIN-    OUT1: 6  ────► Digital Out (Open-drain)
-                │ 4: GND1    OUT2: 5  ────► Digital Out (Push-pull)
-                │                │
-                └────────────────┘
+                    │   ┌────┴────┐  Voltage Clamping Protection
+                    │   │         │  (Limits input to ±1V)
+                    │   │  ┌───┐  │
+                    │   ├──┤►D1├──┤  BAV99 dual diode (SOT-23)
+                    │   │  └─┬─┘  │  or 1N4148 equivalent
+                    │   │    │    │
+                    │   │   +1V   │  Zener reference (optional)
+                    │   │    │    │  or tied to GND1 for simple
+                    │   │  ┌─▼─┐  │  clamping with Schottky
+                    │   └──┤◄D2├──┤
+                    │      └───┘  │
+                    │             │
+              VIN+ ─┤             ├─ VIN-
+                    │             │
+                ┌───▼─────────────▼───┐
+                │   AMC23C10          │
+                │  (8-pin SOIC)       │
+                │                     │
+                │ 1: VDD1    VDD2: 8  │◄─── +5V (MCU Side)
+                │ 2: VIN+    GND2: 7  │◄─── GND (MCU Side)
+                │ 3: VIN-    OUT1: 6  ├────► Digital Out (Open-drain)
+                │ 4: GND1    OUT2: 5  ├────► Digital Out (Push-pull)
+                │                     │
+                └─────────────────────┘
                       │
                    +5V_ISO (Isolated)
                    GND_ISO
@@ -173,6 +185,138 @@ For zero-crossing detection, we need to scale the 400VAC signal so the zero-cros
 
          Alternative: Use OUT1 (Pin 6, Open-Drain) with external pull-up
 ```
+
+## Input Voltage Clamping Protection
+
+To provide additional protection for the AMC23C10 inputs against transient overvoltages, voltage clamping diodes limit the differential input to ±1V maximum. This protects against:
+- Transient spikes during power-up/power-down
+- Lightning-induced surges
+- Switching transients from the AC line
+- Component failures in the voltage divider
+
+### Clamping Circuit Options
+
+**Option 1: Simple Schottky Diode Clamping (Recommended)**
+```
+                    VIN+
+                     │
+                     ├──────┤►├──────┐  D1: BAT54S Schottky (forward)
+                     │               │
+                    GND1            GND1
+                     │               │
+                     └──────┤◄├──────┘  D2: BAT54S Schottky (reverse)
+                     │
+                    VIN-
+
+    Components:
+    - D1, D2: BAT54S dual Schottky diode (SOT-23 package)
+    - Forward voltage: ~0.3V @ 1mA
+    - Clamp level: ±0.3V to ±0.6V (temperature dependent)
+```
+
+**Option 2: Back-to-Back Zener Diode Clamping**
+```
+                    VIN+
+                     │
+                  ┌──┴──┐
+                  │     │
+               ┌──┤►├───┤◄├──┐  D1: BZX84C1V0 (1.0V Zener)
+               │  └─────┘    │  D2: BZX84C1V0 (1.0V Zener)
+               │             │
+              GND1          VIN-
+
+    Components:
+    - D1, D2: 1.0V Zener diodes (SOD-323 or SOT-23)
+    - Clamp level: ±1.0V ±5%
+    - More precise voltage limiting
+```
+
+**Option 3: TVS Diode Protection**
+```
+                    VIN+
+                     │
+                  ┌──┴──┐
+                  │ TVS │  Bidirectional TVS diode
+                  │ 1.5V│  (e.g., SMAJ1.5CA)
+                  └──┬──┘
+                     │
+                    VIN-
+
+    Components:
+    - TVS: Bidirectional 1.5V TVS diode
+    - Clamp level: ±1.5V typical
+    - Fast response (<1ns)
+    - Higher surge current capability
+```
+
+### Design Considerations
+
+**Why ±1V Clamping?**
+- Normal operating range: ±20mV (well below ±1V)
+- AMC23C10 absolute maximum: ±VDD1 (±5V maximum)
+- Clamping at ±1V provides:
+  - 50× safety margin over normal operation
+  - 5× safety margin below absolute maximum
+  - Protection without affecting normal zero-crossing detection
+
+**Diode Selection Criteria:**
+1. **Low leakage current**: <1µA at rated voltage (minimizes offset errors)
+2. **Fast response**: <10ns for transient protection
+3. **Low capacitance**: <100pF (preserves signal integrity)
+4. **Temperature stability**: -40°C to +125°C operation
+
+**Recommended Components:**
+
+| Component | Part Number | Type | Clamp Voltage | Package |
+|-----------|-------------|------|---------------|---------|
+| D1, D2 | BAT54S | Dual Schottky | ±0.4V | SOT-23 |
+| D1, D2 | BAV99 | Dual switching | ±0.7V | SOT-23 |
+| D1, D2 | BZX84C1V0 | 1.0V Zener | ±1.0V | SOT-23 |
+| TVS | SMAJ1.5CA | Bidirectional TVS | ±1.5V | SMA |
+
+### Implementation Notes
+
+1. **Schottky Diodes (Simplest)**:
+   - Use BAT54S (dual Schottky in SOT-23)
+   - Connect cathodes to VIN+, anodes to GND1 (forward protection)
+   - Connect anodes to VIN-, cathodes to GND1 (reverse protection)
+   - Typical clamping: ±0.3V to ±0.5V
+   - Lowest component count
+
+2. **Zener Diodes (Most Precise)**:
+   - Use two 1.0V zeners back-to-back
+   - Precise ±1.0V clamping
+   - Better temperature stability
+   - Slightly higher capacitance
+
+3. **TVS Diodes (Highest Surge Capability)**:
+   - Single bidirectional TVS device
+   - Handles highest surge currents (kA range)
+   - Fastest response time
+   - Best for harsh industrial environments
+
+### Circuit Analysis with Clamping
+
+**Normal Operation (±20mV)**:
+- Diodes remain reverse-biased
+- No effect on signal
+- Leakage current: <1µA (negligible)
+
+**Transient Event (>±1V)**:
+- Diodes conduct immediately
+- Voltage clamped to safe level
+- Excess energy dissipated through diodes
+- Current limited by R4A/R4B (1kΩ resistors)
+
+**Maximum Clamp Current** (if voltage divider fails):
+- Worst case: 565V reaches divider output
+- Current through R4A or R4B: 565V / 28,201kΩ = 20mA
+- Diode must handle: 20mA continuous (easily managed by SOT-23 devices)
+
+**Power Dissipation in Diodes**:
+- Normal operation: P = 0mW (no conduction)
+- During transient: P = V_clamp × I_max = 1V × 20mA = 20mW (brief duration)
+- SOT-23 package rating: typically 200mW continuous
 
 ## High Voltage Power Supply (Isolated)
 
@@ -239,12 +383,21 @@ The AMC23C10 requires an isolated power supply on the high-voltage side (VDD1). 
 | C3, C4 | 100nF | 50V | Ceramic X7R (LV side) | 2 |
 | C5 | 10µF | 16V | Ceramic or Tantalum (isolated supply) | 1 |
 
+### Input Protection Diodes (Voltage Clamping)
+| Part | Part Number | Type | Clamp Voltage | Package | Quantity |
+|------|-------------|------|---------------|---------|----------|
+| D1, D2 | BAT54S | Dual Schottky | ±0.4V | SOT-23 | 1 pair |
+| OR D1, D2 | BZX84C1V0 | 1.0V Zener | ±1.0V | SOT-23 | 2 |
+| OR TVS1 | SMAJ1.5CA | Bidirectional TVS | ±1.5V | SMA | 1 |
+
+**Note**: Choose one clamping option. Schottky (BAT54S) is recommended for simplicity and lowest component count.
+
 ### Main Components
 | Part | Part Number | Description | Quantity |
 |------|-------------|-------------|----------|
 | U1 | AMC23C10DWVR | Isolated comparator (8-pin SOIC) | 1 |
 | PS1 | MGJ2D051505SC | Isolated 5V to 5V DC-DC converter (1W) | 1 |
-| - | - | 10kΩ pull-up (if using OUT1 open-drain) | 1 |
+| R_PU | 10kΩ | Pull-up resistor (if using OUT1 open-drain) | 1 |
 
 ## Power Dissipation Calculations
 
@@ -298,7 +451,8 @@ All resistors operate well within their power ratings (using 1/2W resistors with
    │  └────────────┬─────────────┘          │
    │               │                         │
    │  ┌────────────▼─────────────┐          │
-   │  │  AMC23C10 + Filter       │          │
+   │  │  AMC23C10 + Clamping     │          │
+   │  │  Diodes + Filter         │          │
    │  │  + Isolated Power        │          │
    │  └──────────────────────────┘          │
    │                                         │
@@ -318,6 +472,7 @@ All resistors operate well within their power ratings (using 1/2W resistors with
 - **Low Voltage Traces**: Standard 0.5mm width
 - **Ground Planes**: Separate ground planes for HV and LV sides
 - **Via Prohibition**: No vias in the isolation zone
+- **Clamping Diode Placement**: Mount D1/D2 as close as possible to AMC23C10 VIN+ and VIN- pins (within 5mm) for effective transient protection
 
 ## Integration with AVR16EB32
 
@@ -443,6 +598,12 @@ This circuit operates with **400VAC phase-to-phase voltage** which is **LETHAL**
    - Should be stable HIGH or LOW
    - Verify signal reaches AVR PD4 pin
 
+3. **Clamping Diode Test** (if installed):
+   - Inject test signal: ±2V square wave at 1kHz
+   - Measure voltage at VIN+ and VIN-
+   - Should be clamped to ±1V (Zener) or ±0.4V (Schottky)
+   - Verify no distortion at normal operating levels (±20mV)
+
 ### Stage 2: Low Voltage Testing (12VAC)
 1. **Setup**:
    - Use 12VAC transformer (isolated from mains)
@@ -518,6 +679,8 @@ This circuit operates with **400VAC phase-to-phase voltage** which is **LETHAL**
 | Blown fuse on power-up | Surge/inrush current | Verify MOV and GDT are functioning |
 | Drift over time | Temperature coefficient | Use precision resistors (<50ppm/°C) |
 | Loss of isolation | Damaged AMC23C10 | Test isolation, replace IC if compromised |
+| Reduced signal at input | Clamping diode leakage | Check diode forward voltage, ensure low leakage type |
+| Clipped waveform | Diodes clamping normal signal | Check voltage divider ratio, verify input is ±20mV not ±1V |
 
 ## Alternative Configurations
 
