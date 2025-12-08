@@ -2,7 +2,13 @@
 
 ## Overview
 
-This document describes the interface circuit for detecting zero-crossings of 400VAC phase-to-phase voltage using the Texas Instruments **AMC23C10 precision isolated comparator**. The AMC23C10 provides reinforced galvanic isolation between the high-voltage measurement side and the low-voltage microcontroller side.
+This document describes the interface circuit for detecting zero-crossings of **400VAC 3-phase, 50Hz (EU standard)** voltage using the Texas Instruments **AMC23C10 precision isolated comparator**. The AMC23C10 provides reinforced galvanic isolation between the high-voltage measurement side and the low-voltage microcontroller side.
+
+**System Specifications:**
+- **Voltage**: 400VAC phase-to-phase (EU 3-phase standard)
+- **Frequency**: 50Hz (EU) - also compatible with 60Hz (US) systems
+- **Phases**: 3-phase (L1, L2, L3)
+- **Application**: Industrial motor control with triac phase angle control
 
 **Important**: The AMC23C10 is an **isolated comparator**, not a delta-sigma modulator. It is designed for fast zero-crossing detection and threshold monitoring, outputting a digital HIGH/LOW signal when the input crosses the threshold. For analog voltage measurement applications, consider the AMC1304/AMC1305 isolated delta-sigma modulator family instead.
 
@@ -22,7 +28,7 @@ This document describes the interface circuit for detecting zero-crossings of 40
 
 ## Application: Phase-to-Phase Zero-Crossing Detection
 
-The AMC23C10 is ideal for detecting zero-crossings in 400VAC phase-to-phase systems (L1-L2, L2-L3, or L3-L1). Zero-crossing detection is essential for:
+The AMC23C10 is ideal for detecting zero-crossings in 400VAC 3-phase systems (L1-L2, L2-L3, or L3-L1) common in EU industrial applications. Zero-crossing detection is essential for:
 - Synchronized triac firing in motor control
 - Power factor correction
 - Soft-start circuits
@@ -33,10 +39,11 @@ The AMC23C10 is ideal for detecting zero-crossings in 400VAC phase-to-phase syst
 
 The AMC23C10 comparator trips when the differential input voltage crosses near zero (±6mV threshold). For zero-crossing detection:
 
-- **Phase-to-Phase Voltage (RMS)**: 400VAC
+- **Phase-to-Phase Voltage (RMS)**: 400VAC (EU 3-phase standard)
+- **AC Frequency**: 50Hz (EU standard) or 60Hz (US standard)
 - **Peak Voltage**: 400V × √2 = 565.7V
 - **Zero-Crossing**: Occurs twice per AC cycle (positive and negative transitions)
-- **Output Frequency**: 120 Hz for 60Hz AC, 100 Hz for 50Hz AC (both edges)
+- **Output Frequency**: 100 Hz for 50Hz AC (EU), 120 Hz for 60Hz AC (US)
 
 ### Voltage Divider Design for Zero-Crossing
 
@@ -373,6 +380,22 @@ The AMC23C10 integrates seamlessly with the existing AVR16EB32 triac control sys
 
 **Note**: The existing `src/triac.c` code already handles zero-crossing detection on PD4. The AMC23C10 provides a clean, isolated zero-crossing signal that replaces simpler zero-cross detector circuits.
 
+### AC Frequency Configuration
+
+For 50Hz EU systems, ensure `include/config.h` is configured correctly:
+
+```c
+/* AC Frequency - UPDATE FOR EU 50Hz SYSTEMS */
+#define AC_FREQ_HZ              50   /* 50 Hz AC (EU standard) */
+#define AC_HALF_PERIOD_US       10000 /* Half period in microseconds (10ms for 50Hz) */
+```
+
+For 60Hz US systems, use:
+```c
+#define AC_FREQ_HZ              60   /* 60 Hz AC (US standard) */
+#define AC_HALF_PERIOD_US       8333 /* Half period in microseconds (8.33ms for 60Hz) */
+```
+
 ## Safety Considerations
 
 ### ⚠️ HIGH VOLTAGE WARNING
@@ -428,7 +451,7 @@ This circuit operates with **400VAC phase-to-phase voltage** which is **LETHAL**
 
 2. **Verification**:
    - Monitor OUT2 (Pin 5) with oscilloscope
-   - Should see square wave at 2× AC frequency (120Hz for 60Hz, 100Hz for 50Hz)
+   - Should see square wave at 2× AC frequency (100Hz for 50Hz EU, 120Hz for 60Hz US)
    - Verify transitions occur at zero-crossings
    - Check propagation delay (~500ns typical)
 
@@ -468,8 +491,8 @@ This circuit operates with **400VAC phase-to-phase voltage** which is **LETHAL**
      - Confirm stable operation
 
 3. **Frequency Verification**:
-   - For 60Hz AC: Zero-crossing frequency should be 120Hz
-   - For 50Hz AC: Zero-crossing frequency should be 100Hz
+   - For 50Hz AC (EU): Zero-crossing frequency should be 100Hz
+   - For 60Hz AC (US): Zero-crossing frequency should be 120Hz
    - Use oscilloscope or frequency counter on PD4
 
 ### Verification Checklist
@@ -639,17 +662,17 @@ If 9.4MΩ resistors are unavailable, use series combinations:
 
 ### Zero-Crossing Detection Timing
 
-For 60Hz AC, 400VAC phase-to-phase:
+For 50Hz AC (EU Standard), 400VAC phase-to-phase:
+- **Period**: 20ms (one complete cycle)
+- **Half-period**: 10ms
+- **Zero-crossings**: 2 per cycle = 100 Hz
+- **Time between crossings**: 10ms
+
+For 60Hz AC (US Standard), 400VAC phase-to-phase:
 - **Period**: 16.67ms (one complete cycle)
 - **Half-period**: 8.33ms
 - **Zero-crossings**: 2 per cycle = 120 Hz
 - **Time between crossings**: 8.33ms
-
-For 50Hz AC, 400VAC phase-to-phase:
-- **Period**: 20ms
-- **Half-period**: 10ms
-- **Zero-crossings**: 2 per cycle = 100 Hz
-- **Time between crossings**: 10ms
 
 ### AMC23C10 Response Time
 - **Propagation delay**: 500ns typical (max 800ns)
@@ -658,14 +681,14 @@ For 50Hz AC, 400VAC phase-to-phase:
 
 ### Triac Firing Window
 - **Minimum firing angle**: ~0.5ms after zero-crossing (from config.h)
-- **Maximum firing angle**: 8.3ms (near end of half-cycle for 60Hz)
-- **Resolution**: 10MHz timer = 100ns per tick = 0.001° resolution at 60Hz
+- **Maximum firing angle**: 10ms (near end of half-cycle for 50Hz EU) or 8.3ms (for 60Hz US)
+- **Resolution**: 10MHz timer = 100ns per tick = 0.0018° resolution at 50Hz
 
 ## Appendix: Waveform Examples
 
 ### Expected Oscilloscope Traces
 
-**Channel 1: AC Input (L1-L2)** - 400VAC RMS, 60Hz
+**Channel 1: AC Input (L1-L2)** - 400VAC RMS, 50Hz (EU Standard)
 ```
     +565V ─────────╱╲─────────╱╲─────────
                   ╱  ╲       ╱  ╲
@@ -675,7 +698,7 @@ For 50Hz AC, 400VAC phase-to-phase:
                   ╲  ╱       ╲  ╱
     -565V ─────────╲╱─────────╲╱─────────
                    
-                |←─ 8.33ms ─→|
+                |←─ 10ms ──→|  (50Hz half-period)
 ```
 
 **Channel 2: AMC23C10 OUT2 (Digital)**
@@ -688,8 +711,10 @@ For 50Hz AC, 400VAC phase-to-phase:
        Zero-cross  Zero-cross  Zero-cross
        (positive)  (negative)  (positive)
        
-       |←───── 120 Hz ──────→|
+       |←───── 100 Hz (50Hz AC) ──────→|
 ```
+
+**Note**: For 60Hz systems (US), the half-period is 8.33ms and output frequency is 120Hz.
 
 **Timing**: OUT2 transitions occur precisely at AC input zero-crossings with ~500ns delay.
 
