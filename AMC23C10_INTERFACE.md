@@ -184,6 +184,11 @@ For zero-crossing detection, we need to scale the 400VAC signal so the zero-cros
                        GND
 
          Alternative: Use OUT1 (Pin 6, Open-Drain) with external pull-up
+
+         Output Behavior (per TI datasheet):
+         - OUT1 (open-drain): HIGH→LOW on rising zero-crossing, LOW→HIGH on falling
+         - OUT2 (push-pull): Toggles with opposite polarity to OUT1
+         - Both outputs suitable for microcontroller or discrete logic
 ```
 
 ## Input Voltage Clamping Protection
@@ -276,12 +281,25 @@ To provide additional protection for the AMC23C10 inputs against transient overv
 
 ### Implementation Notes
 
+**TI Application Note Reference:**
+The clamping diode approach aligns with Texas Instruments' recommended implementation for AC voltage zero-crossing detection in SSR applications (AMC23C10 datasheet, Section 7). TI's reference design uses:
+- Series resistor (similar to our R4A/R4B) for current limiting
+- Two small-signal antiparallel diodes for voltage clamping
+- Near zero crossing, diodes don't conduct, allowing accurate detection
+- OUT1 (open-drain) and OUT2 (push-pull) provide complementary outputs
+
+Our implementation extends this with:
+- High-voltage voltage divider for 400VAC operation
+- Multiple protection layers (MOVs, GDT, fuses)
+- Three clamping options for different applications
+
 1. **Schottky Diodes (Simplest)**:
    - Use BAT54S (dual Schottky in SOT-23)
    - Connect cathodes to VIN+, anodes to GND1 (forward protection)
    - Connect anodes to VIN-, cathodes to GND1 (reverse protection)
    - Typical clamping: ±0.3V to ±0.5V
    - Lowest component count
+   - **Matches TI's recommended small-signal antiparallel diode approach**
 
 2. **Zener Diodes (Most Precise)**:
    - Use two 1.0V zeners back-to-back
@@ -772,24 +790,31 @@ The AMC23C10 can help detect:
 
 1. **AMC23C10 Datasheet**: Texas Instruments, SBAS946 - "Fast Response, Reinforced Isolated Comparator With Dual Output"
    - https://www.ti.com/lit/ds/symlink/amc23c10.pdf
+   - Section 7: Application examples including AC voltage zero-crossing detection for SSR
 
 2. **Application Note**: TI SBOA328 - "Isolated Voltage Sensing for Three-Phase Applications"
 
-3. **IEC 61010**: Safety Requirements for Measurement, Control, and Laboratory Equipment
+3. **AMC23C10 Application Example**: Using antiparallel diodes for AC voltage zero-crossing detection
+   - Detailed in AMC23C10 datasheet (SBASAD0B, Section 7)
+   - Reference design for solid-state relay (SSR) applications
+   - Demonstrates clamping diode implementation
 
-4. **IEC 60664-1**: Insulation coordination for equipment within low-voltage systems
+4. **IEC 61010**: Safety Requirements for Measurement, Control, and Laboratory Equipment
 
-5. **High Voltage Resistor Selection**: Vishay Technical Note on Voltage Dividers
+5. **IEC 60664-1**: Insulation coordination for equipment within low-voltage systems
+
+6. **High Voltage Resistor Selection**: Vishay Technical Note on Voltage Dividers
    - https://www.vishay.com/resistors/high-voltage/
 
-6. **PCB Design for High Voltage**: IPC-2221 standards for creepage and clearance
+7. **PCB Design for High Voltage**: IPC-2221 standards for creepage and clearance
 
-7. **Isolated DC-DC Converters**: Application guide for isolation barriers in industrial applications
+8. **Isolated DC-DC Converters**: Application guide for isolation barriers in industrial applications
 
-8. **Related TI Products**:
+9. **Related TI Products**:
    - AMC1304/AMC1305: For precision voltage measurement (delta-sigma modulators)
    - AMC1300: Basic isolated amplifier
    - AMC3330: Precision isolated amplifier with integrated ADC
+   - TPSI3050-Q1: Isolated gate driver (referenced in TI's SSR application)
 
 ## Appendix: Resistor Value Selection
 
